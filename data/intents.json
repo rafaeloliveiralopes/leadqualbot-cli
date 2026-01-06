@@ -1,0 +1,21 @@
+[
+  {
+    "intent": "orcamento",
+    "keywords": ["preco", "valor", "quanto custa", "orcamento", "cotacao"],
+    "response": "Ficarei feliz em preparar um orçamento para você! Por favor, me informe quais serviços você precisa e entraremos em contato em breve.",
+    "priority": 10
+  },
+  {
+    "intent": "agendamento",
+    "keywords": ["agendar", "marcar", "horario", "disponibilidade", "quando"],
+    "response": "Vou verificar a disponibilidade! Qual dia e horário seria melhor para você?",
+    "priority": 10
+  },
+  {
+    "intent": "atendimento_humano",
+    "keywords": ["falar com atendente", "humano", "pessoa", "representante"],
+    "response": "Entendi! Vou transferir você para um de nossos atendentes. Aguarde um momento.",
+    "priority": 15
+  }
+]
+
