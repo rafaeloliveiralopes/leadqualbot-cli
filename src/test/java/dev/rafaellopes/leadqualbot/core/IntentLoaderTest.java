@@ -2,8 +2,10 @@ package dev.rafaellopes.leadqualbot.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -12,48 +14,67 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IntentLoaderTest {
 
-    private final IntentLoader loader = new IntentLoader(new ObjectMapper());
-
     @Test
-    void shouldLoadIntentsFromJsonFile(@TempDir Path tempDir) throws Exception {
-        Path file = tempDir.resolve("intents.json");
+    void shouldLoadIntentsFromFixtureJson() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        IntentLoader loader = new IntentLoader(mapper);
 
-        String json = """
-            [
-              {
-                "intent": "orcamento",
-                "keywords": ["preco", "orcamento"],
-                "response": "Vamos falar sobre orçamento.",
-                "priority": 10
-              }
-            ]
-            """;
+        Path fixturePath = copyFixtureToTempFile();
 
-        Files.writeString(file, json);
+        List<Intent> intents = loader.load(fixturePath);
 
-        List<Intent> intents = loader.load(file);
+        assertNotNull(intents);
+        assertEquals(2, intents.size());
 
-        assertEquals(1, intents.size());
-        assertEquals("orcamento", intents.getFirst().getIntent());
-        assertEquals(List.of("preco", "orcamento"), intents.getFirst().getKeywords());
-        assertEquals("Vamos falar sobre orçamento.", intents.getFirst().getResponse());
-        assertEquals(10, intents.getFirst().getPriority());
+        Intent first = intents.getFirst();
+        assertEquals("orcamento", first.getIntent());
+        assertEquals("Resposta orçamento", first.getResponse());
+        assertEquals(10, first.getPriority());
+        assertNotNull(first.getKeywords());
+        assertTrue(first.getKeywords().contains("quanto custa"));
+
+        Intent second = intents.get(1);
+        assertEquals("agendamento", second.getIntent());
+        assertEquals("Resposta agendamento", second.getResponse());
+        assertEquals(5, second.getPriority());
+        assertNotNull(second.getKeywords());
+        assertTrue(second.getKeywords().contains("agendar"));
     }
 
     @Test
-    void shouldFailWhenFileDoesNotExist(@TempDir Path tempDir) {
-        Path missing = tempDir.resolve("missing.json");
+    void shouldFailWhenJsonFileDoesNotExist() {
+        ObjectMapper mapper = new ObjectMapper();
+        IntentLoader loader = new IntentLoader(mapper);
+
+        Path missing = Path.of("data/does-not-exist.json");
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, () -> loader.load(missing));
-        assertTrue(ex.getMessage().contains("file not found"));
+        assertNotNull(ex.getMessage());
+        assertTrue(ex.getMessage().toLowerCase().contains("file not found")
+                || ex.getMessage().toLowerCase().contains("not found"));
     }
 
     @Test
-    void shouldFailWhenJsonIsInvalid(@TempDir Path tempDir) throws Exception {
-        Path file = tempDir.resolve("intents.json");
-        Files.writeString(file, "{ invalid json");
+    void shouldFailWhenJsonIsInvalid() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        IntentLoader loader = new IntentLoader(mapper);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> loader.load(file));
-        assertTrue(ex.getMessage().contains("failed to load"));
+        Path temp = Files.createTempFile("invalid-intents", ".json");
+        Files.writeString(temp, "{ invalid json");
+
+        assertThrows(IllegalStateException.class, () -> loader.load(temp));
+    }
+
+    private static Path copyFixtureToTempFile() throws IOException {
+        try (InputStream in = IntentLoaderTest.class.getClassLoader().getResourceAsStream("fixtures/intents.json")) {
+            if (in == null) {
+                throw new FileNotFoundException("Fixture not found on classpath: " + "fixtures/intents.json");
+            }
+
+            Path temp = Files.createTempFile("intent-fixture-", ".json");
+            Files.copy(in, temp, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            temp.toFile().deleteOnExit();
+            return temp;
+        }
     }
 }

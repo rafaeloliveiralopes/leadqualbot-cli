@@ -1,0 +1,15 @@
+[
+  {
+    "intent": "orcamento",
+    "keywords": ["preco", "valor", "quanto custa", "orcamento"],
+    "response": "Resposta orçamento",
+    "priority": 10
+  },
+  {
+    "intent": "agendamento",
+    "keywords": ["agendar", "marcar", "horario"],
+    "response": "Resposta agendamento",
+    "priority": 5
+  }
+]
+
