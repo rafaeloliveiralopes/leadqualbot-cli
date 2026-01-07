@@ -18,6 +18,8 @@ import java.util.Scanner;
 @SuppressWarnings({"java:S106"}) // CLI uses System.out/System.err by design
 public class App {
 
+    private static final Path CURRENT_DIR = Path.of("").toAbsolutePath();
+
     private static final String FALLBACK_MESSAGE =
             "Desculpe, não entendi. Você pode reformular ou digitar /ajuda para ver as opções.";
 
@@ -41,6 +43,7 @@ public class App {
             intents = loader.load(kbPath);
         } catch (Exception e) {
             System.err.println("Erro ao carregar base de conhecimento: " + e.getMessage());
+            System.err.println("Dica: use --kb <caminho-do-json> ou mantenha data/intents.json ao lado do jar.");
             System.exit(1);
             return;
         }
@@ -132,9 +135,9 @@ public class App {
             if (Files.isRegularFile(location)) {
                 return location.getParent();
             }
-            return Path.of("").toAbsolutePath();
+            return CURRENT_DIR;
         } catch (Exception e) {
-            return Path.of("").toAbsolutePath();
+            return CURRENT_DIR;
         }
     }
 }
