@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.rafaellopes.leadqualbot.core.Intent;
 import dev.rafaellopes.leadqualbot.core.IntentLoader;
 import dev.rafaellopes.leadqualbot.core.IntentMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +19,8 @@ import java.util.Scanner;
  */
 @SuppressWarnings({"java:S106"}) // CLI uses System.out/System.err by design
 public class App {
+
+    private static final Logger log = LoggerFactory.getLogger(App.class);
 
     private static final Path CURRENT_DIR = Path.of("").toAbsolutePath();
 
@@ -33,20 +37,28 @@ public class App {
             """;
 
     public static void main(String[] args) {
+        log.info("Starting LeadQualBot");
+
         ObjectMapper objectMapper = new ObjectMapper();
         IntentLoader loader = new IntentLoader(objectMapper);
         IntentMatcher matcher = new IntentMatcher();
 
         Path kbPath = resolveKbPath(args);
+        log.info("Knowledge base path: {}", kbPath.toAbsolutePath());
+
         List<Intent> intents;
         try {
             intents = loader.load(kbPath);
         } catch (Exception e) {
+            log.error("Failed to load knowledge base: {}", kbPath.toAbsolutePath());
+
             System.err.println("Erro ao carregar base de conhecimento: " + e.getMessage());
             System.err.println("Dica: use --kb <caminho-do-json> ou mantenha data/intents.json ao lado do jar.");
             System.exit(1);
             return;
         }
+
+        log.info("Knowledge base loaded: intents={}", intents.size());
 
         System.out.println("Bem-vindo ao LeadQualBot!");
         System.out.println("Digite /ajuda para ver os comandos disponíveis.\n");
@@ -60,21 +72,38 @@ public class App {
                 String userMessage = scanner.nextLine();
 
                 if (userMessage == null || userMessage.isBlank()) {
+                    log.debug("Blank input received");
                     System.out.println(FALLBACK_MESSAGE + "\n");
-                } else {
-                    String trimmed = userMessage.trim();
+                    continue;
+                }
 
-                    switch (trimmed) {
-                        case "/sair" -> {
-                            System.out.println("Até logo!");
-                            running = false;
+                String trimmed = userMessage.trim();
+
+                switch (trimmed) {
+                    case "/sair" -> {
+                        log.debug("Command received: /sair");
+                        System.out.println("Até logo!");
+                        running = false;
+                    }
+                    case "/ajuda" -> {
+                        log.debug("Command received: /ajuda");
+                        System.out.println(HELP_MESSAGE);
+                    }
+                    case "/reiniciar" -> {
+                        log.debug("Command received: /reiniciar");
+                        System.out.println("Conversa reiniciada. Como posso ajudar?\n");
+                    }
+                    default -> {
+                        Optional<Intent> bestIntent = findBestIntentSafe(trimmed, intents, matcher);
+
+                        if (bestIntent.isPresent()) {
+                            log.info("Selected intent: {}", bestIntent.get().getIntent());
+                        } else {
+                            log.info("No intent matched (fallback)");
                         }
-                        case "/ajuda" -> System.out.println(HELP_MESSAGE);
-                        case "/reiniciar" -> System.out.println("Conversa reiniciada. Como posso ajudar?\n");
-                        default -> {
-                            String response = decideResponse(trimmed, intents, matcher, FALLBACK_MESSAGE);
-                            System.out.println(response + "\n");
-                        }
+
+                        String response = bestIntent.map(Intent::getResponse).orElse(FALLBACK_MESSAGE);
+                        System.out.println(response + "\n");
                     }
                 }
             }
@@ -102,6 +131,21 @@ public class App {
             return bestIntent.map(Intent::getResponse).orElse(fallbackMessage);
         } catch (Exception e) {
             return fallbackMessage;
+        }
+    }
+
+    private static Optional<Intent> findBestIntentSafe(String userMessage, List<Intent> intents, IntentMatcher matcher) {
+        if (userMessage == null || userMessage.isBlank()) {
+            return Optional.empty();
+        }
+        if (intents == null || intents.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            return matcher.findBestIntent(userMessage, intents);
+        } catch (Exception e) {
+            log.warn("Intent matching failed, using fallback: {}", e.getClass().getSimpleName());
+            return Optional.empty();
         }
     }
 
