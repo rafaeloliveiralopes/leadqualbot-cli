@@ -5,6 +5,8 @@ import dev.rafaellopes.leadqualbot.core.Intent;
 import dev.rafaellopes.leadqualbot.core.IntentLoader;
 import dev.rafaellopes.leadqualbot.core.IntentMatcher;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -33,9 +35,10 @@ public class App {
         IntentLoader loader = new IntentLoader(objectMapper);
         IntentMatcher matcher = new IntentMatcher();
 
+        Path kbPath = resolveKbPath(args);
         List<Intent> intents;
         try {
-            intents = loader.loadDefault();
+            intents = loader.load(kbPath);
         } catch (Exception e) {
             System.err.println("Erro ao carregar base de conhecimento: " + e.getMessage());
             System.exit(1);
@@ -96,6 +99,42 @@ public class App {
             return bestIntent.map(Intent::getResponse).orElse(fallbackMessage);
         } catch (Exception e) {
             return fallbackMessage;
+        }
+    }
+
+    /**
+     * Resolves the knowledge base path from command-line arguments.
+     * If --kb <path> is provided, uses that path.
+     * Otherwise, resolves data/intents.json relative to the JAR directory or current directory.
+     *
+     * @param args the command-line arguments
+     * @return the resolved path to the knowledge base file
+     */
+    private static Path resolveKbPath(String[] args) {
+        if (args != null) {
+            for (int i = 0; i < args.length; i++) {
+                if ("--kb".equals(args[i]) && i + 1 < args.length) {
+                    String value = args[i + 1];
+                    if (value != null && !value.isBlank()) {
+                        return Path.of(value.trim());
+                    }
+                }
+            }
+        }
+        Path baseDir = getAppBaseDir();
+        return baseDir.resolve("data").resolve("intents.json");
+    }
+
+    private static Path getAppBaseDir() {
+        try {
+            var uri = App.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+            Path location = Path.of(uri);
+            if (Files.isRegularFile(location)) {
+                return location.getParent();
+            }
+            return Path.of("").toAbsolutePath();
+        } catch (Exception e) {
+            return Path.of("").toAbsolutePath();
         }
     }
 }
