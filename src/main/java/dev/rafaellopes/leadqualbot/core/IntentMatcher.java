@@ -33,31 +33,40 @@ public class IntentMatcher {
         int bestPriority = Integer.MIN_VALUE;
 
         for (Intent intent : intents) {
-            if (intent == null) {
+            int score = 0;
+
+            if (intent != null) {
+                score = score(messageTokens, intent.getKeywords());
+            }
+
+            if (intent == null || score == 0) {
                 continue;
             }
 
-            int score = score(messageTokens, intent.getKeywords());
+            int priority = intent.getPriority();
 
-            if (score > bestScore) {
-                bestScore = score;
-                bestPriority = intent.getPriority();
+            if (isBetterCandidate(score, priority, bestScore, bestPriority)) {
                 bestIntent = intent;
-            } else if (score == bestScore && score > 0) {
-                int priority = intent.getPriority();
-                if (priority > bestPriority) {
-                    bestPriority = priority;
-                    bestIntent = intent;
-                }
-                // If still tied (same score and same priority), keep the earlier one (JSON order)
+                bestScore = score;
+                bestPriority = priority;
             }
         }
 
         if (bestScore == 0) {
             return Optional.empty();
         }
-        return Optional.of(bestIntent);
 
+        return Optional.of(bestIntent);
+    }
+
+    private boolean isBetterCandidate(int score, int priority, int bestScore, int bestPriority) {
+        if (score > bestScore) {
+            return true;
+        }
+        if (score < bestScore) {
+            return false;
+        }
+        return priority > bestPriority;
     }
 
     private int score(List<String> messageTokens, List<String> keywords) {
@@ -69,10 +78,9 @@ public class IntentMatcher {
 
         for (String keyword : keywords) {
             List<String> keywordTokens = tokenize(keyword);
-            if (keywordTokens.isEmpty()) {
-                continue;
+            if (!keywordTokens.isEmpty()) {
+                total += countOccurrences(messageTokens, keywordTokens);
             }
-            total += countOccurrences(messageTokens, keywordTokens);
         }
 
         return total;
@@ -90,17 +98,38 @@ public class IntentMatcher {
             return List.of();
         }
 
-        String sanitized = normalized.replaceAll("[^a-z0-9]+", " ").trim();
-        if (sanitized.isEmpty()) {
-            return List.of();
+        String alphaNumOnly = convertNonAlphanumericToSpaces(normalized);
+        return extractTokens(alphaNumOnly);
+    }
+
+    private String convertNonAlphanumericToSpaces(String text) {
+        StringBuilder sb = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            boolean isAlphaNum = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+            sb.append(isAlphaNum ? c : ' ');
+        }
+        return sb.toString();
+    }
+
+    private List<String> extractTokens(String text) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == ' ') {
+                if (!current.isEmpty()) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                }
+            } else {
+                current.append(c);
+            }
         }
 
-        String[] parts = sanitized.split("\\s+");
-        List<String> tokens = new ArrayList<>(parts.length);
-        for (String part : parts) {
-            if (!part.isBlank()) {
-                tokens.add(part);
-            }
+        if (!current.isEmpty()) {
+            tokens.add(current.toString());
         }
 
         return tokens;
@@ -136,7 +165,7 @@ public class IntentMatcher {
 
             if (match) {
                 count++;
-                i += k; // Move past this occurrence
+                i += k;
             } else {
                 i++;
             }
