@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.rafaellopes.leadqualbot.core.Intent;
 import dev.rafaellopes.leadqualbot.core.IntentLoader;
 import dev.rafaellopes.leadqualbot.core.IntentMatcher;
-import dev.rafaellopes.leadqualbot.export.SessionExporter;
-import dev.rafaellopes.leadqualbot.export.SessionSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +15,7 @@ import java.util.Scanner;
 
 /**
  * CLI entrypoint for the LeadQualBot chatbot.
- * Runs an interactive loop reading user input and responding based on intent matching.
+ * Runs an interactive loop reading user input and responding based on keyword intent matching.
  */
 @SuppressWarnings({"java:S106"}) // CLI uses System.out/System.err by design
 public class App {
@@ -27,15 +25,20 @@ public class App {
     private static final Path CURRENT_DIR = Path.of("").toAbsolutePath();
 
     private static final String FALLBACK_MESSAGE =
-            "No momento não tenho essa informação. Digite /ajuda para ver as opções ou vou transferir você para um atendente humano que poderá te ajudar melhor!";
+            "Não tenho uma resposta para isso. :( \nDigite /ajuda para ver exemplos de perguntas ou tente reformular sua dúvida.";
 
     private static final String HELP_MESSAGE = """
-            Comandos disponíveis:
-            /ajuda - Mostra esta mensagem
-            /reiniciar - Reinicia a conversa
-            /sair - Encerra o chatbot
+            Exemplos de perguntas sobre automação com chatbots que você pode me fazer:
+            - O que é automação?
+            - O que é chatbot?
+            - O que é automação com chatbot?
+            - O que inclui um serviço de automação com chatbot?
+            - Como funciona uma conversa com chatbot?
 
-            Você também pode fazer perguntas sobre nossos serviços!
+            Comandos disponíveis:
+            - /ajuda: mostra esta mensagem
+            - /reiniciar: reinicia a conversa
+            - /sair: encerra o chatbot
             """;
 
     public static void main(String[] args) {
@@ -55,21 +58,16 @@ public class App {
             log.error("Failed to load knowledge base: {}", kbPath.toAbsolutePath(), e);
 
             System.out.println("\n⚠️  Desculpe, estou com dificuldades técnicas no momento.");
-            System.out.println("Vou te passar para um atendente humano. Se desejar, você também pode entrar em contato conosco por nosso email.");
-            System.out.println("- E-mail de suporte:  contato@exemplo.com");
-            System.out.println("Nosso time terá prazer em te ajudar!");
+            System.out.println("Não consegui carregar a base de conhecimento (intents.json).");
+            System.out.println("Tente novamente mais tarde.");
             System.exit(1);
             return;
         }
 
         log.info("Knowledge base loaded: intents={}", intents.size());
 
-        SessionSummary sessionSummary = new SessionSummary();
-        Path exportPath = resolveExportPath();
-        SessionExporter exporter = new SessionExporter(exportPath);
 
-        System.out.println("Bem-vindo ao LeadQualBot!");
-        System.out.println("Digite /ajuda para ver os comandos disponíveis.\n");
+        printWelcome();
 
         try (Scanner scanner = new Scanner(System.in)) {
             boolean running = true;
@@ -90,7 +88,7 @@ public class App {
                 switch (trimmed) {
                     case "/sair" -> {
                         log.debug("Command received: /sair");
-                        System.out.println("Até logo!");
+                        System.out.println("Conversa encerrada. Obrigado pela visita!");
                         running = false;
                     }
                     case "/ajuda" -> {
@@ -99,17 +97,16 @@ public class App {
                     }
                     case "/reiniciar" -> {
                         log.debug("Command received: /reiniciar");
-                        System.out.println("Conversa reiniciada. Como posso ajudar?\n");
+                        System.out.println("Conversa reiniciada.\n");
+                        printWelcome();
                     }
                     default -> {
                         Optional<Intent> bestIntent = findBestIntentSafe(trimmed, intents, matcher);
 
                         if (bestIntent.isPresent()) {
                             log.info("Selected intent: {}", bestIntent.get().getIntent());
-                            sessionSummary.recordIntent(bestIntent.get().getIntent());
                         } else {
                             log.info("No intent matched (fallback)");
-                            sessionSummary.recordFallback();
                         }
 
                         String response = bestIntent.map(Intent::getResponse).orElse(FALLBACK_MESSAGE);
@@ -117,16 +114,14 @@ public class App {
                     }
                 }
             }
-
-            // End session and export summary
-            sessionSummary.endSession();
-
-            // Show summary on console
-            System.out.println(SessionExporter.formatForConsole(sessionSummary));
-
-            // Try to export to file (graceful failure)
-            exporter.export(sessionSummary);
         }
+    }
+
+    private static void printWelcome() {
+        System.out.println("Bem-vindo ao LeadQualBot!");
+        System.out.println("A nossa empresa trabalha com Serviços de Automação com chatbot.\n");
+        System.out.println("Me diga o que você gostaria de saber sobre automações com chatbot.");
+        System.out.println("Dica: digite /ajuda para ver exemplos de perguntas e comandos.\n");
     }
 
     /**
@@ -202,15 +197,5 @@ public class App {
         } catch (Exception e) {
             return CURRENT_DIR;
         }
-    }
-
-    /**
-     * Resolves the export path for session summaries.
-     * Sessions are exported to leads.txt in the current directory.
-     *
-     * @return the resolved path to the export file
-     */
-    private static Path resolveExportPath() {
-        return CURRENT_DIR.resolve("leads.txt");
     }
 }
