@@ -6,6 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -13,6 +16,7 @@ import java.util.Objects;
 
 /**
  * Loads intents from an external JSON file outside the JAR.
+ * Ensures UTF-8 encoding for cross-platform compatibility.
  */
 public class IntentLoader {
 
@@ -45,8 +49,8 @@ public class IntentLoader {
             throw new IllegalStateException("knowledge base path is not a file: " + absolutePath);
         }
 
-        try {
-            List<Intent> intents = objectMapper.readValue(path.toFile(), INTENT_LIST);
+        try (Reader reader = new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8)) {
+            List<Intent> intents = objectMapper.readValue(reader, INTENT_LIST);
             log.info("Knowledge base loaded successfully: {} intents", intents == null ? 0 : intents.size());
             return intents;
         } catch (IOException e) {

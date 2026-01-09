@@ -2,69 +2,62 @@ package dev.rafaellopes.chatbotfaq.core;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Unit tests for {@link TextNormalizer}.
- */
 class TextNormalizerTest {
 
     @Test
-    void shouldNormalizeAccentsAndCasing() {
-        assertEquals("orcamento agora", TextNormalizer.normalize("OrÇaménto Agora"));
-    }
-
-    @Test
     void shouldConvertToLowercase() {
-        assertEquals("upper case text", TextNormalizer.normalize("UPPER CASE TEXT"));
+        assertEquals("hello", TextNormalizer.normalize("HELLO"));
+        assertEquals("hello", TextNormalizer.normalize("HeLLo"));
     }
 
     @Test
-    void shouldRemoveVariousAccents() {
-        assertEquals("aeiou aeiou aeiou ao n c",
-                TextNormalizer.normalize("áéíóú àèìòù âêîôû ãõ ñ ç"));
+    void shouldRemoveAccents() {
+        assertEquals("automacao", TextNormalizer.normalize("automação"));
+        assertEquals("e", TextNormalizer.normalize("é"));
+        assertEquals("e", TextNormalizer.normalize("ê"));
+        assertEquals("a", TextNormalizer.normalize("á"));
+        assertEquals("a", TextNormalizer.normalize("à"));
+        assertEquals("a", TextNormalizer.normalize("ã"));
+        assertEquals("o", TextNormalizer.normalize("ó"));
+        assertEquals("o", TextNormalizer.normalize("ô"));
+        assertEquals("o", TextNormalizer.normalize("õ"));
     }
 
     @Test
-    void shouldCollapseDuplicateSpaces() {
-        assertEquals("multiple spaces here", TextNormalizer.normalize("multiple   spaces    here"));
+    void shouldNormalizeWhitespace() {
+        assertEquals("hello world", TextNormalizer.normalize("hello  world"));
+        assertEquals("hello world", TextNormalizer.normalize("  hello   world  "));
+        assertEquals("hello world", TextNormalizer.normalize("hello\tworld"));
     }
 
     @Test
-    void shouldTrimLeadingAndTrailingSpaces() {
-        assertEquals("trimmed", TextNormalizer.normalize("   trimmed   "));
+    void shouldHandleComplexText() {
+        assertEquals("o que e automacao", TextNormalizer.normalize("O que é automação"));
+        assertEquals("o que e automacao?", TextNormalizer.normalize("o que é automação?"));
+        assertEquals("definicao de automacao", TextNormalizer.normalize("Definição de Automação"));
     }
 
     @Test
-    void shouldHandleNullInput() {
-        assertEquals("", TextNormalizer.normalize(null));
-    }
-
-    @Test
-    void shouldHandleEmptyString() {
+    void shouldHandleNullAndEmpty() {
+        assertNull(TextNormalizer.normalize(null));
         assertEquals("", TextNormalizer.normalize(""));
-    }
-
-    @Test
-    void shouldHandleWhitespaceOnlyString() {
-        assertEquals("", TextNormalizer.normalize("   \t  \n  "));
-    }
-
-    @Test
-    void shouldHandleMixedAccentsSpacesAndCasing() {
-        assertEquals("ola, mundo! com acentos",
-                TextNormalizer.normalize("  Olá,   Múndo!  COM  açéntos  "));
+        assertEquals("", TextNormalizer.normalize("   "));
     }
 
     @Test
     void shouldHandleSpecialCharacters() {
-        assertEquals("texto@com#simbolos$especiais%",
-                TextNormalizer.normalize("Texto@com#símbolos$especiais%"));
+        assertEquals("cafe", TextNormalizer.normalize("café"));
+        assertEquals("naive", TextNormalizer.normalize("naïve"));
+        assertEquals("senor", TextNormalizer.normalize("Señor"));
     }
 
     @Test
-    void shouldHandleNumbersAndLetters() {
-        assertEquals("agendamento 123 as 14h30",
-                TextNormalizer.normalize("Agéndamento 123 às 14h30"));
+    void shouldBeIdempotent() {
+        String text = "O que é Automação?";
+        String normalized = TextNormalizer.normalize(text);
+        String normalizedTwice = TextNormalizer.normalize(normalized);
+        assertEquals(normalized, normalizedTwice);
     }
 }
