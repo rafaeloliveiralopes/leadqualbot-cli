@@ -4,9 +4,13 @@
     "keywords": [
       "o que e automacao",
       "o que é automacao",
-      "automacao",
-      "automatizar",
-      "automacao de processos"
+      "o que e automatizar",
+      "o que é automatizar",
+      "automacao de processos",
+      "definicao de automacao",
+      "definição de automação",
+      "significado de automacao",
+      "significado de automação"
     ],
     "response": "Automação é usar tecnologia para executar tarefas repetitivas com menos esforço manual. Em negócios, isso pode incluir responder clientes automaticamente, organizar pedidos, enviar mensagens, registrar dados e integrar ferramentas para reduzir retrabalho.",
     "priority": 20
@@ -16,13 +20,42 @@
     "keywords": [
       "o que e chatbot",
       "o que é chatbot",
-      "chatbot",
-      "bot",
+      "o que e bot",
+      "o que é bot",
+      "o que e um chatbot",
+      "o que é um chatbot",
+      "definicao de chatbot",
+      "definição de chatbot",
+      "significado de chatbot",
       "robô de atendimento",
       "robo de atendimento"
     ],
     "response": "Chatbot é um programa que simula uma conversa para responder perguntas e orientar o usuário. Ele pode funcionar por regras e palavras-chave (como este exemplo) ou por IA, dependendo do projeto.",
     "priority": 20
+  },
+  {
+    "intent": "quando_usar_chatbot",
+    "keywords": [
+      "quando usar chatbot",
+      "quando usar um chatbot",
+      "quando utilizar chatbot",
+      "quando utilizar um chatbot",
+      "quando devo usar chatbot",
+      "quando devo usar um chatbot",
+      "quando devo utilizar chatbot",
+      "quando devo utilizar um chatbot",
+      "para que serve chatbot",
+      "para que serve um chatbot",
+      "para que usar chatbot",
+      "para que usar um chatbot",
+      "em que situacao usar chatbot",
+      "em que situação usar chatbot",
+      "casos de uso chatbot",
+      "cenarios para chatbot",
+      "cenários para chatbot"
+    ],
+    "response": "Use um chatbot quando tiver perguntas frequentes e repetitivas, atendimento que pode ser padronizado, necessidade de resposta rápida fora do horário comercial, triagem inicial de dúvidas ou para liberar sua equipe de tarefas repetitivas e focar em atendimentos mais complexos.",
+    "priority": 22
   },
   {
     "intent": "automacao_com_chatbot",
