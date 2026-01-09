@@ -29,40 +29,78 @@ Ele responde perguntas usando um sistema simples de matching e uma base de conhe
 
 ---
 
-## Como compilar e executar
+# 📦 Para Usuários (pacote pronto)
 
-### Pré-requisitos
+> **Esta seção é para quem recebeu o arquivo ZIP pronto para uso.**
+
+## Pré-requisitos
+
+- Java 21 ou superior instalado
+
+Para verificar, abra o terminal e digite:
+```bash
+java -version
+```
+
+## Como executar
+
+1. Extraia o arquivo ZIP em uma pasta
+2. Abra o terminal **na pasta onde estão os arquivos**
+3. Execute:
+
+```bash
+java -jar chatbotfaq-cli-0.1.0-SNAPSHOT-jar-with-dependencies.jar
+```
+
+> ⚠️ **Importante:** O comando deve ser executado na mesma pasta onde estão o JAR e a pasta `data/`.
+
+## Comandos disponíveis
+
+| Comando | Descrição |
+|---------|-----------|
+| `/ajuda` | Mostra exemplos de perguntas |
+| `/reiniciar` | Reinicia a conversa |
+| `/sair` | Encerra o chatbot |
+
+---
+
+# 🛠️ Para Desenvolvedores (código-fonte)
+
+> **Esta seção é para quem tem o código-fonte e quer compilar.**
+
+## Pré-requisitos
+
 - Java 21 ou superior
-- Maven (ou use o wrapper ./mvnw)
+- Maven (ou use o wrapper `./mvnw`)
 
-### Compilar
+## Compilar
 
 ```bash
 ./mvnw clean package
-````
+```
 
-Isso gera dois JARs em target/:
+Isso gera dois JARs em `target/`:
 
-* chatbotfaq-cli-0.1.0-SNAPSHOT.jar (sem dependências)
-* chatbotfaq-cli-0.1.0-SNAPSHOT-jar-with-dependencies.jar (recomendado)
+| Arquivo | Descrição |
+|---------|-----------|
+| `chatbotfaq-cli-0.1.0-SNAPSHOT.jar` | Sem dependências |
+| `chatbotfaq-cli-0.1.0-SNAPSHOT-jar-with-dependencies.jar` | **Recomendado** |
 
-### Executar
+## Executar (após compilar)
 
 ```bash
 java -jar target/chatbotfaq-cli-0.1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
-O chatbot inicia e exibe uma mensagem de boas-vindas. Digite suas perguntas e pressione Enter.
+## Executar testes
 
-Comandos disponíveis:
+```bash
+./mvnw test
+```
 
-* /ajuda: mostra ajuda com exemplos de perguntas e comandos
-* /reiniciar: reinicia a conversa
-* /sair: encerra o chatbot
+## Caminho customizado para a base (opcional)
 
-### Caminho customizado para a base (opcional)
-
-Por padrão, o chatbot carrega **data/intents.json** na mesma pasta onde o JAR está sendo executado.
+Por padrão, o chatbot carrega `data/intents.json` na mesma pasta onde o JAR está sendo executado.
 
 Para usar outro arquivo:
 
@@ -177,21 +215,6 @@ Comandos disponíveis:
 - /reiniciar: reinicia a conversa
 - /sair: encerra o chatbot
 ```
-
----
-
-## Executar testes
-
-```bash
-./mvnw test
-```
-
-Os testes cobrem:
-
-* Normalização de texto (minúsculas, remoção de acentos)
-* Carregamento e validação do JSON
-* Matching de intents e desempate por priority
-* Tratamento de comandos no CLI
 
 ---
 
