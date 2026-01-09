@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!--
+        Development configuration: logs to file for debugging.
+
+        Usage:
+        java -Dlogback.configurationFile=src/main/resources/logback-dev.xml -jar target/chatbotfaq-cli-0.1.0-SNAPSHOT-jar-with-dependencies.jar
+
+        Or via Maven:
+        ./mvnw exec:java -Dlogback.configurationFile=src/main/resources/logback-dev.xml
+    -->
+
+    <!-- All logs go to file (diagnostic purposes for developers) -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>chatbotfaq.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Root logger: all logs to file, no console pollution -->
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>
+

@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- All logs go to file only (diagnostic purposes for developers) -->
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>chatbotfaq.log</file>
-        <append>true</append>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
+    <!--
+        Production configuration: logging completely disabled.
+        No log files will be created and no console output.
 
-    <!-- Root logger: all logs to file only, no console pollution -->
-    <root level="INFO">
-        <appender-ref ref="FILE"/>
+        For development/debugging, use logback-dev.xml:
+        java -Dlogback.configurationFile=logback-dev.xml -jar chatbotfaq-cli.jar
+    -->
+
+    <!-- NOP appender - discards all logs -->
+    <appender name="NOP" class="ch.qos.logback.core.helpers.NOPAppender"/>
+
+    <!-- Root logger: OFF level with NOP appender ensures no output -->
+    <root level="OFF">
+        <appender-ref ref="NOP"/>
     </root>
 
 </configuration>

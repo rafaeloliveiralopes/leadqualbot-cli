@@ -1,40 +1,69 @@
 package dev.rafaellopes.chatbotfaq.core;
 
 import java.text.Normalizer;
-import java.util.Locale;
 
 /**
- * Utility class for normalizing user input before keyword matching.
- *
- * <p>Rules:
- * <ul>
- *   <li>lowercase (Locale.ROOT)</li>
- *   <li>remove accents/diacritics</li>
- *   <li>collapse whitespace</li>
- *   <li>trim</li>
- * </ul>
+ * Normalizes text for consistent matching across different platforms and encodings.
+ * Performs lowercase conversion, accent removal, and whitespace normalization.
  */
-public class TextNormalizer {
+public final class TextNormalizer {
+
+    // Direct mapping for common Portuguese accented characters
+    // This handles cases where NFD normalization fails (e.g., Windows cp1252 encoding)
+    private static final String ACCENTED =   "àáâãäåèéêëìíîïòóôõöùúûüçñÀÁÂÃÄÅÈÉÊËÌÍÎÏÒÓÔÕÖÙÚÛÜÇÑ";
+    private static final String UNACCENTED = "aaaaaaeeeeiiiiooooouuuucnAAAAAAEEEEIIIIOOOOOUUUUCN";
+
+    private TextNormalizer() {
+        throw new UnsupportedOperationException("Utility class");
+    }
 
     /**
-     * Normalizes input text for matching. Returns empty string for null or empty input.
+     * Normalizes text by converting to lowercase, removing accents, and normalizing whitespace.
+     * This ensures consistent matching regardless of platform encoding or user input variations.
      *
-     * @param text input text, may be null
-     * @return normalized text, never null
+     * @param text the text to normalize
+     * @return normalized text, or null if input is null
      */
     public static String normalize(String text) {
-        if (text == null || text.isEmpty()) {
+        if (text == null) {
             return "";
         }
 
-        String normalized = text.toLowerCase(Locale.ROOT);
+        // Convert to lowercase using ROOT locale for consistent behavior
+        String normalized = text.toLowerCase(java.util.Locale.ROOT);
+
+        // Remove accents using Unicode normalization
+        // NFD = Canonical Decomposition (separates base char from accent)
         normalized = Normalizer.normalize(normalized, Normalizer.Form.NFD);
-        normalized = normalized.replaceAll("\\p{Mn}", "");
-        normalized = normalized.replaceAll("\\s+", " ").trim();
+
+        // Remove combining diacritical marks (accents)
+        normalized = normalized.replaceAll("\\p{M}", "");
+
+        // Fallback: direct character replacement for encodings where NFD doesn't work
+        // (e.g., Windows PowerShell with cp1252)
+        normalized = removeAccentsByMapping(normalized);
+
+        // Normalize whitespace (replace multiple spaces with single space and trim)
+        normalized = normalized.trim().replaceAll("\\s+", " ");
 
         return normalized;
     }
 
-    private TextNormalizer() {
+    /**
+     * Removes accents by direct character mapping.
+     * This is a fallback for when NFD normalization doesn't work due to encoding issues.
+     */
+    private static String removeAccentsByMapping(String text) {
+        StringBuilder sb = new StringBuilder(text.length());
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            int index = ACCENTED.indexOf(c);
+            if (index >= 0) {
+                sb.append(UNACCENTED.charAt(index));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

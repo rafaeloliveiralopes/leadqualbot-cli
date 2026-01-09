@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 
 /**
  * CLI entrypoint for the ChatbotFAQ chatbot.
@@ -66,18 +65,29 @@ public class App {
 
         log.info("Knowledge base loaded: intents={}", intents.size());
 
+        if (intents.isEmpty()) {
+            log.warn("Knowledge base loaded but contains no intents!");
+            System.out.println("\n⚠️  Aviso: A base de conhecimento está vazia.");
+            System.out.println("Verifique se o arquivo data/intents.json contém perguntas configuradas.\n");
+        }
 
         printWelcome();
 
-        try (Scanner scanner = new Scanner(System.in)) {
+        // Use ConsoleLineReader for automatic charset detection (handles UTF-8/cp1252 mismatch on Windows)
+        try (ConsoleLineReader reader = new ConsoleLineReader(System.in)) {
             boolean running = true;
+            String userMessage;
 
-            while (running && scanner.hasNextLine()) {
+            while (running) {
                 System.out.print("> ");
+                System.out.flush();
 
-                String userMessage = scanner.nextLine();
+                userMessage = reader.readLine();
+                if (userMessage == null) {
+                    break;
+                }
 
-                if (userMessage == null || userMessage.isBlank()) {
+                if (userMessage.isBlank()) {
                     log.debug("Blank input received");
                     System.out.println(FALLBACK_MESSAGE + "\n");
                     continue;
@@ -114,6 +124,8 @@ public class App {
                     }
                 }
             }
+        } catch (Exception e) {
+            log.error("Error reading user input", e);
         }
     }
 
