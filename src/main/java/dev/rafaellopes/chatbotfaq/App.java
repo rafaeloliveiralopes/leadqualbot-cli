@@ -66,6 +66,11 @@ public class App {
 
         log.info("Knowledge base loaded: intents={}", intents.size());
 
+        if (intents.isEmpty()) {
+            log.warn("Knowledge base loaded but contains no intents!");
+            System.out.println("\n⚠️  Aviso: A base de conhecimento está vazia.");
+            System.out.println("Verifique se o arquivo data/intents.json contém perguntas configuradas.\n");
+        }
 
         printWelcome();
 

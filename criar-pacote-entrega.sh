@@ -78,9 +78,9 @@ modificar perguntas e respostas.
 
 EOF
 
-# Criar arquivo ZIP
+# Criar arquivo ZIP (entrando na pasta para evitar subpasta aninhada)
 echo "🗜️  Criando arquivo ZIP..."
-zip -r "$ZIP_FILE" "$PACKAGE_DIR/" > /dev/null
+cd "$PACKAGE_DIR" && zip -r "../$ZIP_FILE" . > /dev/null && cd ..
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
